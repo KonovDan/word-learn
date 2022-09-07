@@ -26,36 +26,29 @@ typedef struct Word
     struct Word *next;
 } Word;
 
-FILE *fileptr;
-struct Word *wordptr;
+FILE *filePtr;
+struct Word *wordListPtr;
 
 // Predefinitions
 //>------------------------------------------------------------------------------------------------
-void load_words(void);
-int get_word_amount(void);
+Word * load_words(Word * wordListPtr, FILE * filePtr);
+int get_word_amount(FILE * filePtr);
 
 // Main logic
 //>------------------------------------------------------------------------------------------------
 int main(int argc, char *argv[])
 {
-    argc = 2; // Temporary
 
-    if (argc != 2)
+
+    FILE * filePtr = fopen("words.txt", "r"); // Temporary
+    if (filePtr == NULL)
     {
-        printf("Usage: ./main wordlist.txt\n");
+        printf("Unable to open \"words\" file\n");
         return 1;
     }
 
-    fileptr = fopen("words.txt", "r"); // Temporary
-    if (fileptr == NULL)
-    {
-        printf("Unable to open \"words\" file\n");
-        return 2;
-    }
+    Word * listOfWords = load_words(NULL,filePtr);
 
-    load_words();
-
-    printf("%s", wordptr->enWord);
 
     return 0;
 }
@@ -63,7 +56,7 @@ int main(int argc, char *argv[])
 // Helping function
 //>------------------------------------------------------------------------------------------------
 
-int get_word_amount(void)
+int get_word_amount(FILE * filePtr)
 {
     setlocale(LC_ALL, "ru_RU.UTF-16");
 
@@ -72,36 +65,42 @@ int get_word_amount(void)
     while (ch + 48 != '\n')
     {
         value = value * 10 + ch;
-        ch = fgetc(fileptr) - 48;
+        ch = fgetc(filePtr) - 48;
     };
     return value;
 };
 
-void load_words(void)
+Word * load_words(Word * wordListPtr, FILE * filePtr)
 {
+    int wordAmount = get_word_amount(filePtr);
 
-    for (int n = 0; n < get_word_amount(); n++)
+    for (int n = 0; n < wordAmount; n++)
     {
-        Word *tmp = malloc(sizeof(Word));
-        char ch = fgetc(fileptr), i = 0, j = 0;
-        char *wrd = malloc(sizeof(char) * 20);
-        
-        while (ch != EOF && ch != '\n')
-        {
-            if (ch == ' ')
-            {
-                tmp->enWord = (char *) wrd;
-                wrd = malloc(sizeof(char) * 20);
-            }
-            else
-            {
-                wrd[i] = ch;
-            }
+        char word_1[50] = {0};
+        char word_2[50] = {0};
 
-            ch = fgetc(fileptr); i++;
+        struct Word * word = (struct Word *) malloc(sizeof(Word));
+        word -> index = n;
+        word -> next = wordListPtr;
+
+        int i = 0;
+        for(char ch = fgetc(filePtr); ch != ' ';ch = fgetc(filePtr), i++)
+        {
+            word_1[i] = ch;
         }
-        tmp->ruWord = wrd;
-        tmp->next = wordptr;
-        wordptr = tmp;
+        word_1[i+1] = '\0';
+        word -> enWord = word_1;
+
+        i = 0;
+        for(char ch = fgetc(filePtr); ch != '\n';ch = fgetc(filePtr), i++)
+        {
+            word_2[i] = ch;
+        }
+        word_1[i+1] = '\0';
+        word -> ruWord = word_2;
+        
+        wordListPtr = word;
     }
+
+    return wordListPtr;
 };
